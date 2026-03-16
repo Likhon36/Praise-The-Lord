@@ -4,17 +4,17 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write  # Fixes the '403 Forbidden' error when uploading the IPA
+  contents: write
 
 jobs:
   build-ios:
     name: 🎉 iOS Build
     runs-on: macos-latest
     
-    # This tells EVERY step below to run inside your project folder
+    # This ensures all steps know where your project files are
     defaults:
       run:
-        working-directory: . 
+        working-directory: ./Praise-The-Lord
 
     steps:
       - name: 🔍 Checkout code
@@ -30,7 +30,7 @@ jobs:
 
       - name: 🛠️ Update Pods
         run: pod repo update
-        working-directory: ios  # Pods must be updated inside the ios folder
+        working-directory: ./Praise-The-Lord/ios
 
       - name: 🏗️ Build iOS Release (Unsigned)
         run: flutter build ios --release --no-codesign
@@ -40,14 +40,14 @@ jobs:
           mkdir -p Payload
           mv Runner.app Payload/
           zip -r FlutterIpaExport.ipa Payload
-        working-directory: build/ios/iphoneos
+        working-directory: ./Praise-The-Lord/build/ios/iphoneos
 
       - name: 📤 Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/ios/iphoneos/FlutterIpaExport.ipa
+          file: Praise-The-Lord/build/ios/iphoneos/FlutterIpaExport.ipa
           asset_name: PraiseTheLord.ipa
           tag: v1.0
           overwrite: true
-          body: "Release generated via GitHub Actions for Praise-The-Lord."
+          body: "Build generated via GitHub Actions."
