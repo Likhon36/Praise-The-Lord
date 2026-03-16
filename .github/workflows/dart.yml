@@ -4,46 +4,50 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write # Required for creating releases and uploading files
+  contents: write  # Fixes the '403 Forbidden' error when uploading the IPA
 
 jobs:
   build-ios:
     name: 🎉 iOS Build
     runs-on: macos-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4 # Updated to v4 for Node.js 20+ support
+    
+    # This tells EVERY step below to run inside your project folder
+    defaults:
+      run:
+        working-directory: . 
 
-      - name: Set up Flutter
+    steps:
+      - name: 🔍 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Removed architecture: x64 to allow native Apple Silicon runner speeds
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: flutter pub get
 
-      - name: Update Pods
+      - name: 🛠️ Update Pods
         run: pod repo update
-        working-directory: ios
+        working-directory: ios  # Pods must be updated inside the ios folder
 
-      - name: Build iOS Release (Unsigned)
+      - name: 🏗️ Build iOS Release (Unsigned)
         run: flutter build ios --release --no-codesign
 
-      - name: Create IPA Structure
+      - name: 📂 Create IPA Structure
         run: |
           mkdir -p Payload
           mv Runner.app Payload/
           zip -r FlutterIpaExport.ipa Payload
         working-directory: build/ios/iphoneos
 
-      - name: Upload binaries to release
+      - name: 📤 Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          # Path must be absolute or relative to the root
           file: build/ios/iphoneos/FlutterIpaExport.ipa
           asset_name: PraiseTheLord.ipa
           tag: v1.0
           overwrite: true
-          body: "This is a new release built with GitHub Actions."
+          body: "Release generated via GitHub Actions for Praise-The-Lord."
